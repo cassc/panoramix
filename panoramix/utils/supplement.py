@@ -47,18 +47,17 @@ def abi_path():
 
 
 def check_supplements():
-    if not abi_path().is_file():
+    out = shelve.open(str(abi_path()))
+    if len(out) < 1:
         compressed_supplements = Path(__file__).parent.parent / "data" / "abi_dump.xz"
         logger.info("Loading %s into %s...", compressed_supplements, abi_path())
-        with lzma.open(compressed_supplements) as inf, shelve.open(
-            str(abi_path())
-        ) as out:
+        with lzma.open(compressed_supplements) as inf:
             for line in inf:
                 line = json.loads(line)
                 selector, abi = line["selector"], line["abi"]
                 out[selector] = abi
 
-        assert abi_path().is_file()
+        assert len(out) > 1
 
         logger.info("%s is ready.", abi_path())
 
